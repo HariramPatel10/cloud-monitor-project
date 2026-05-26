@@ -1,0 +1,505 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Village API SaaS Dashboard</title>
+
+  <!-- CHART JS -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+  <style>
+    body {
+      margin: 0;
+      font-family: 'Segoe UI', sans-serif;
+      background: #0b1220;
+      color: white;
+    }
+
+    .container {
+      max-width: 1400px;
+      margin: auto;
+      padding: 20px;
+    }
+
+    .header {
+      font-size: 26px;
+      font-weight: bold;
+      margin-bottom: 20px;
+      color: #38bdf8;
+    }
+
+    .grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 15px;
+    }
+
+    .card {
+      background: #111827;
+      padding: 20px;
+      border-radius: 12px;
+      box-shadow: 0 0 20px rgba(0,0,0,0.3);
+      margin-top: 15px;
+    }
+
+    input {
+      width: 100%;
+      padding: 12px;
+      margin-top: 10px;
+      border-radius: 8px;
+      border: none;
+      background: #0f172a;
+      color: white;
+    }
+
+    button {
+      margin-top: 10px;
+      padding: 12px;
+      width: 100%;
+      border: none;
+      border-radius: 8px;
+      background: linear-gradient(90deg,#06b6d4,#3b82f6);
+      color: white;
+      font-weight: bold;
+      cursor: pointer;
+    }
+
+    button:hover { opacity: 0.9; }
+
+    .small-btn {
+      width: auto;
+      padding: 6px 10px;
+      font-size: 12px;
+      margin-left: 5px;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 10px;
+    }
+
+    th {
+      background: #1e293b;
+      padding: 10px;
+      color: #38bdf8;
+    }
+
+    td {
+      padding: 10px;
+      border-bottom: 1px solid #334155;
+    }
+
+    tr:hover { background: #1e293b; }
+
+    .status { margin-top: 8px; font-size: 13px; }
+    .success { color: #22c55e; }
+    .error { color: #ef4444; }
+    .loading { color: #facc15; }
+
+    .suggestion {
+      padding: 8px;
+      background: #0f172a;
+      margin-top: 5px;
+      border-radius: 6px;
+      cursor: pointer;
+    }
+
+    .suggestion:hover { background: #1e293b; }
+
+    .usage {
+      font-size: 13px;
+      margin-top: 8px;
+      color: #cbd5f5;
+    }
+
+    /* KPI CARDS */
+
+    .metrics {
+      display: grid;
+      grid-template-columns: repeat(4,1fr);
+      gap: 15px;
+      margin-bottom: 20px;
+    }
+
+    .metric-card {
+      background: #111827;
+      padding: 20px;
+      border-radius: 12px;
+      text-align: center;
+    }
+
+    .metric-card h2 {
+      color: #38bdf8;
+      margin: 0;
+    }
+
+    .metric-card p {
+      margin-top: 8px;
+      color: #cbd5e1;
+    }
+
+    /* CHARTS */
+
+    .chart-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 20px;
+      margin-top: 20px;
+    }
+
+    .chart-card {
+      background: #111827;
+      padding: 20px;
+      border-radius: 12px;
+    }
+
+    canvas {
+      margin-top: 10px;
+      background: white;
+      border-radius: 8px;
+      padding: 10px;
+    }
+
+    /* HEATMAP */
+
+    .heatmap {
+      display: grid;
+      grid-template-columns: repeat(6,1fr);
+      gap: 8px;
+      margin-top: 10px;
+    }
+
+    .heat-cell {
+      height: 40px;
+      border-radius: 6px;
+      text-align: center;
+      line-height: 40px;
+      font-size: 12px;
+      color: white;
+    }
+
+  </style>
+</head>
+
+<body>
+
+<div class="container">
+
+  <div class="header">🚀 Village API SaaS Dashboard</div>
+
+  <!-- KPI METRICS -->
+
+  <div class="metrics">
+
+    <div class="metric-card">
+      <h2>462K+</h2>
+      <p>Total Villages</p>
+    </div>
+
+    <div class="metric-card">
+      <h2>245</h2>
+      <p>Active Users</p>
+    </div>
+
+    <div class="metric-card">
+      <h2>82K</h2>
+      <p>Today's API Requests</p>
+    </div>
+
+    <div class="metric-card">
+      <h2>48ms</h2>
+      <p>Avg Response Time</p>
+    </div>
+
+  </div>
+
+  <div class="grid">
+
+    <!-- CREATE USER -->
+    <div class="card">
+      <h3>👤 Create User</h3>
+      <input id="name" placeholder="Name">
+      <input id="email" placeholder="Email">
+      <button onclick="createUser()">Create User</button>
+      <div id="userResult" class="status"></div>
+    </div>
+
+    <!-- API KEY -->
+    <div class="card">
+      <h3>🔐 API Key</h3>
+      <input id="apiKey" placeholder="Enter API Key (ak_...)" />
+      <button onclick="copyKey()" class="small-btn">Copy</button>
+      <div id="usage" class="usage"></div>
+    </div>
+
+  </div>
+
+  <!-- SEARCH -->
+  <div class="card">
+    <h3>🔎 Search Villages</h3>
+    <input id="search" placeholder="Search village, district, state..." />
+    <button onclick="searchAPI()">Search</button>
+    <div id="searchStatus" class="status"></div>
+  </div>
+
+  <!-- AUTOCOMPLETE -->
+  <div class="card">
+    <h3>⚡ Autocomplete</h3>
+    <input id="auto" oninput="autoAPI()" placeholder="Start typing..." />
+    <div id="suggestions"></div>
+    <div id="autoStatus" class="status"></div>
+  </div>
+
+  <!-- OUTPUT -->
+  <div class="card">
+    <h3>📊 Results</h3>
+    <div id="output">No data yet...</div>
+  </div>
+
+  <!-- ANALYTICS -->
+
+  <div class="chart-grid">
+
+    <div class="chart-card">
+      <h3>📊 Top 10 States by Village Count</h3>
+      <canvas id="barChart"></canvas>
+    </div>
+
+    <div class="chart-card">
+      <h3>📈 API Requests Over 30 Days</h3>
+      <canvas id="lineChart"></canvas>
+    </div>
+
+    <div class="chart-card">
+      <h3>🥧 User Distribution by Plan</h3>
+      <canvas id="pieChart"></canvas>
+    </div>
+
+    <div class="chart-card">
+      <h3>📉 Response Time Trends</h3>
+      <canvas id="areaChart"></canvas>
+    </div>
+
+    <div class="chart-card">
+      <h3>📦 Requests by Endpoint</h3>
+      <canvas id="stackChart"></canvas>
+    </div>
+
+    <div class="chart-card">
+      <h3>🔥 Usage by Hour</h3>
+      <div class="heatmap" id="heatmap"></div>
+    </div>
+
+  </div>
+
+</div>
+
+<script>
+
+// CREATE USER
+async function createUser() {
+
+  const name = document.getElementById("name").value;
+  const email = document.getElementById("email").value;
+
+  const res = await fetch("http://localhost:3000/create-user", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ name, email })
+  });
+
+  const data = await res.json();
+
+  document.getElementById("apiKey").value = data.api_key;
+
+  document.getElementById("userResult").innerText =
+    "API Key Generated ✔";
+}
+
+// COPY API KEY
+function copyKey() {
+
+  const key = document.getElementById("apiKey");
+
+  key.select();
+
+  document.execCommand("copy");
+}
+
+// SEARCH
+async function searchAPI() {
+
+  const key = document.getElementById("apiKey").value;
+  const q = document.getElementById("search").value;
+
+  const res = await fetch(`http://localhost:3000/search?q=${q}`, {
+    headers: { "x-api-key": key }
+  });
+
+  const data = await res.json();
+
+  let html = `
+    <table>
+      <tr>
+        <th>Village</th>
+        <th>Subdistrict</th>
+        <th>District</th>
+        <th>State</th>
+      </tr>
+  `;
+
+  data.data.forEach(v => {
+
+    html += `
+      <tr>
+        <td>${v.village_name}</td>
+        <td>${v.subdistrict_name}</td>
+        <td>${v.district_name}</td>
+        <td>${v.state_name}</td>
+      </tr>
+    `;
+  });
+
+  html += "</table>";
+
+  document.getElementById("output").innerHTML = html;
+
+  document.getElementById("usage").innerText =
+    `Usage: ${data.usage.used} / ${data.usage.limit}`;
+}
+
+// AUTOCOMPLETE
+async function autoAPI() {
+
+  const key = document.getElementById("apiKey").value;
+  const q = document.getElementById("auto").value;
+
+  if (q.length < 2) return;
+
+  const res = await fetch(`http://localhost:3000/autocomplete?q=${q}`, {
+    headers: { "x-api-key": key }
+  });
+
+  const data = await res.json();
+
+  let html = "";
+
+  data.data.forEach(item => {
+
+    html += `<div class="suggestion" onclick="fillSearch('${item.label}')">${item.full}</div>`;
+  });
+
+  document.getElementById("suggestions").innerHTML = html;
+}
+
+function fillSearch(text) {
+
+  document.getElementById("search").value = text;
+
+  document.getElementById("suggestions").innerHTML = "";
+}
+
+/* BAR CHART */
+
+new Chart(document.getElementById('barChart'), {
+
+  type: 'bar',
+
+  data: {
+    labels: ['MH','UP','TN','KA','RJ','WB','MP','GJ','AP','BR'],
+
+    datasets: [{
+      label: 'Village Count',
+      data: [45000,42000,39000,35000,32000,30000,28000,26000,24000,22000]
+    }]
+  }
+});
+
+/* LINE CHART */
+
+new Chart(document.getElementById('lineChart'), {
+
+  type: 'line',
+
+  data: {
+    labels: ['Week1','Week2','Week3','Week4'],
+
+    datasets: [{
+      label: 'API Requests',
+      data: [20000,45000,70000,82000],
+      fill: false
+    }]
+  }
+});
+
+/* PIE CHART */
+
+new Chart(document.getElementById('pieChart'), {
+
+  type: 'pie',
+
+  data: {
+    labels: ['Free','Premium','Pro','Unlimited'],
+
+    datasets: [{
+      data: [45,30,20,5]
+    }]
+  }
+});
+
+/* AREA CHART */
+
+new Chart(document.getElementById('areaChart'), {
+
+  type: 'line',
+
+  data: {
+    labels: ['Mon','Tue','Wed','Thu','Fri'],
+
+    datasets: [{
+      label: 'Response Time',
+      data: [55,48,52,46,49],
+      fill: true
+    }]
+  }
+});
+
+/* STACK CHART */
+
+new Chart(document.getElementById('stackChart'), {
+
+  type: 'bar',
+
+  data: {
+    labels: ['/search','/autocomplete','/states'],
+
+    datasets: [{
+      label: 'Requests',
+      data: [50000,20000,12000]
+    }]
+  }
+});
+
+/* HEATMAP */
+
+const heatmap = document.getElementById("heatmap");
+
+for(let i = 0; i < 24; i++) {
+
+  const cell = document.createElement("div");
+
+  const value = Math.floor(Math.random() * 255);
+
+  cell.className = "heat-cell";
+
+  cell.style.background = `rgb(${value/2}, ${value}, 120)`;
+
+  cell.innerText = i + ":00";
+
+  heatmap.appendChild(cell);
+}
+
+</script>
+
+</body>
+</html>
